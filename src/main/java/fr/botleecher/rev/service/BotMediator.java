@@ -3,6 +3,7 @@ package fr.botleecher.rev.service;
 import fr.botleecher.rev.BotLeecher;
 import fr.botleecher.rev.BotListener;
 import fr.botleecher.rev.IrcConnectionListener;
+import fr.botleecher.rev.model.Pack;
 import fr.botleecher.rev.tools.TextWriter;
 import org.pircbotx.User;
 
@@ -29,6 +30,8 @@ public interface BotMediator extends IrcConnectionListener, TextWriter, BotListe
     void connect(String server, String channel) throws InterruptedException;
 
     void getList(String user, boolean refresh);
+
+    List<Pack> getCurrentPackList(String user);
 
     void getPack(String user, int pack);
 
