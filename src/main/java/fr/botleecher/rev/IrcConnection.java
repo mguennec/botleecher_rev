@@ -1,14 +1,12 @@
 package fr.botleecher.rev;
 
 import com.google.inject.Inject;
-import fr.botleecher.rev.service.BotMediator;
 import fr.botleecher.rev.service.BotLeecherFactory;
+import fr.botleecher.rev.service.BotMediator;
 import fr.botleecher.rev.service.NicknameProvider;
 import org.pircbotx.Configuration;
 import org.pircbotx.PircBotX;
 import org.pircbotx.User;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -18,10 +16,7 @@ import java.util.*;
  * @author francisdb
  */
 public class IrcConnection extends PircBotX {
-    
-    private static final Logger LOGGER = LoggerFactory.getLogger(BotLeecher.class);
 
-    
     private final List<IrcConnectionListener> listeners;
     //private PropertyChangeSupport propertyChangeSupport;
     
