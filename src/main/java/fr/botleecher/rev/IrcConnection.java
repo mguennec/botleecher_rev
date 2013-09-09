@@ -59,8 +59,12 @@ public class IrcConnection extends PircBotX {
     }
 
     public void removeLeecher(User user) {
-        final BotLeecher leecher = leechers.get(user.getNick());
+        removeLeecher(user.getNick());
+    }
+    public void removeLeecher(String user) {
+        final BotLeecher leecher = leechers.get(user);
         if (leecher != null) {
+            leecher.stop();
             leechers.remove(leecher);
         }
     }
@@ -68,7 +72,9 @@ public class IrcConnection extends PircBotX {
     @Override
     public void shutdown() {
         super.shutdown();
-        leechers.clear();
+        for (String user : leechers.keySet()) {
+            removeLeecher(user);
+        }
     }
     
     /**
