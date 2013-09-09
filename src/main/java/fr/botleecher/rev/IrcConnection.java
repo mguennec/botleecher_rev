@@ -20,7 +20,7 @@ public class IrcConnection extends PircBotX {
     private final List<IrcConnectionListener> listeners;
     //private PropertyChangeSupport propertyChangeSupport;
     
-    private Map<String,BotLeecher> leechers;
+    private final Map<String,BotLeecher> leechers;
     
     private final BotLeecherFactory botLeecherFactory;
 

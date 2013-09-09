@@ -50,7 +50,10 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     @Override
     public void disconnected() {
         if (ircConnection != null) {
-            ircConnection.shutdown();
+            ircConnection = null;
+            users.clear();
+            service.sendUserList(Collections.<String>emptyList());
+            writeText("Disconnected");
         }
     }
 
@@ -151,8 +154,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
      */
     public void connect(final String server, final String channel) throws InterruptedException {
         if (ircConnection != null) {
-            ircConnection.shutdown();
-            ircConnection = null;
+            disconnected();
         }
         if (!getServers().contains(server)) {
             addServer(server);
