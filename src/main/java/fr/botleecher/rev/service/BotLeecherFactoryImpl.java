@@ -12,11 +12,10 @@ import fr.botleecher.rev.IrcConnection;
 import org.pircbotx.User;
 
 /**
- *
  * @author fdb
  */
 @Singleton
-public class BotLeecherFactoryImpl implements BotLeecherFactory{
+public class BotLeecherFactoryImpl implements BotLeecherFactory {
     private final Settings settings;
     private final PackListReader packListReader;
 

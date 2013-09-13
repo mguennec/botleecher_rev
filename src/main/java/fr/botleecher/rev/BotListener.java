@@ -10,17 +10,18 @@
 package fr.botleecher.rev;
 
 import fr.botleecher.rev.model.Pack;
+
 import java.util.List;
 
 /**
- *
  * @author francisdb
  */
 public interface BotListener {
-    
+
     /**
      * Triggered when the pack list has been loaded
-     * @param packList 
+     *
+     * @param packList
      */
     void packListLoaded(String botName, List<Pack> packList);
 }

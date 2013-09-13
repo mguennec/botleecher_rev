@@ -10,24 +10,23 @@
 package fr.botleecher.rev.model;
 
 /**
- *
  * @author francisdb
  */
 public enum PackStatus {
     /**
-     * 
+     *
      */
     AVAILABLE,
     /**
-     * 
+     *
      */
-    QUEUED, 
+    QUEUED,
     /**
-     * 
+     *
      */
-    DOWNLOADED, 
+    DOWNLOADED,
     /**
-     * 
+     *
      */
     DOWNLOADING
 }

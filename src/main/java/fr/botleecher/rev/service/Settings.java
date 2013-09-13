@@ -9,7 +9,6 @@ import java.io.File;
 import java.util.List;
 
 /**
- *
  * @author fdb
  */
 public interface Settings {

@@ -23,16 +23,17 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- *
  * @author francisdb
  */
 @Singleton
 public class PackListReaderImpl implements PackListReader {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(BotLeecher.class);
-    
+    private static final Pattern PATTERN = Pattern.compile("#([0-9]+) *([0-9]+)x \\[ *<? *([0-9\\.]*)(.)\\] (.+)");
     private Settings settings;
 
     @Inject
@@ -42,94 +43,65 @@ public class PackListReaderImpl implements PackListReader {
 
     @Override
     public PackList readPacks(File listFile) {
-        List<Pack> packs = new ArrayList<Pack>();
-        List<String> messages = new ArrayList<String>();
+        List<Pack> packs = new ArrayList<>();
+        List<String> messages = new ArrayList<>();
 
-        BufferedReader in = null;
-        try {
-            in = new BufferedReader(new FileReader(listFile));
+        try (BufferedReader in = new BufferedReader(new FileReader(listFile))) {
             String str;
-            Pack pack;
             while ((str = in.readLine()) != null) {
-                if (str.trim().startsWith("#")) {
-                    pack = readPackLine(str);
+                final Matcher matcher = PATTERN.matcher(str);
+                if (matcher.find()) {
+                    final Pack pack = readPackLine(matcher);
                     checkExists(pack);
                     packs.add(pack);
                 } else {
                     messages.add(str);
                 }
             }
-            in.close();
         } catch (IOException ex) {
             LOGGER.error("Could not read packet file!", ex);
-        } finally{
-            if(in != null){
-                try {
-                    in.close();
-                } catch (IOException ex) {
-                    LOGGER.error("Closing buffered file reader failed", ex);
-                }
-            }
         }
 
         return new PackList(packs, messages);
     }
-    
-    private void checkExists(Pack pack){
+
+    private void checkExists(Pack pack) {
         File saveFolder = settings.getSaveFolder();
         File packFile = new File(saveFolder, pack.getName());
-        if(packFile.exists()){
+        if (packFile.exists()) {
             pack.setStatus(PackStatus.DOWNLOADED);
         }
     }
 
-    private Pack readPackLine(String line) {
-        Pack pack = new Pack();
-        try {
-        String trimmed = line.trim();
-        int startIndex = trimmed.indexOf("] ") + 2;
+    private Pack readPackLine(Matcher matcher) {
+        final Pack pack = new Pack();
+
+        pack.setId(Integer.parseInt(matcher.group(1)));
         pack.setStatus(PackStatus.AVAILABLE);
-        pack.setName(trimmed.substring(startIndex));
-        int endIndex = startIndex - 1;
-        startIndex = trimmed.indexOf(" [");
-        pack.setSize(calcSize(trimmed.substring(startIndex, endIndex)));
-        endIndex = startIndex - 1;
-        startIndex = trimmed.indexOf(" ");
-        pack.setDownloads(calcDownloads(trimmed.substring(startIndex, endIndex)));
-        endIndex = startIndex;
-        pack.setId(calcPackId(trimmed.substring(0, endIndex)));
-        } catch (Exception e) {
-            LoggerFactory.getLogger(this.getClass()).info(line, e);
-        }
+        pack.setName(matcher.group(5));
+        pack.setDownloads(Integer.parseInt(matcher.group(2)));
+        pack.setSize(calcSize(matcher.group(3), matcher.group(4)));
+
         return pack;
     }
 
-    private int calcPackId(String packIdPart) {
-        String clean = packIdPart.trim().replaceAll("#", "");
-        return Integer.parseInt(clean);
-    }
-
-    private int calcDownloads(String downloadsPart) {
-        String clean = downloadsPart.trim().replaceAll("x", "");
-        return Integer.parseInt(clean);
-    }
-
-    private int calcSize(String sizePart) {
-        String clean = sizePart.replaceAll("\\[", "").replaceAll("\\]", "").trim();
-        String suffix = clean.substring(clean.length() - 1);
-        int multiplier = 1;
-        if (suffix.equals("M")) {
-            multiplier = 1024;
-        } else if (suffix.equals("K")) {
-            multiplier = 1;
-        } else if (suffix.equals("G")) {
-            multiplier = 1024 * 1024;
-        } else {
-            LOGGER.warn("Unknown size suffix: " + suffix + " in " + sizePart);
+    private int calcSize(final String size, final String unit) {
+        final int multiplier;
+        switch (unit) {
+            case "M":
+                multiplier = 1024;
+                break;
+            case "K":
+                multiplier = 1;
+                break;
+            case "G":
+                multiplier = 1024 * 1024;
+                break;
+            default:
+                multiplier = 1;
+                break;
         }
-        String size = clean.substring(0, clean.length() - 1);
-        int calculatedSIze = (int) (Double.parseDouble(size) * multiplier);
-        return calculatedSIze;
+        return (int) (Double.parseDouble(size) * multiplier);
     }
 
 }

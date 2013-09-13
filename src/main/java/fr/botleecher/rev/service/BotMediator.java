@@ -24,7 +24,6 @@ import java.io.Serializable;
 import java.util.*;
 
 /**
- *
  * @author francisdb
  */
 @Singleton
@@ -42,7 +41,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     private String server;
     private String channel;
 
-    private Map<String, User> users = new HashMap<String, User>();
+    private Map<String, User> users = new HashMap<>();
 
     @Inject
     private EventMediatorService service;
@@ -73,15 +72,6 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
             }
         }
     }
-    @Override
-    public void onNotice(NoticeEvent event) {
-        if (ircConnection != null) {
-            BotLeecher leecher = getIrcConnection().getBotLeecher(event.getUser().getNick());
-            if (leecher != null) {
-                leecher.onNotice(event.getNotice());
-            }
-        }
-    }
 
     @Override
     public void onIncomingFileTransfer(final IncomingFileTransferEvent event) {
@@ -98,10 +88,11 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
 
     @Override
     public void onUserList(UserListEvent event) {
-        final ArrayList<User> list = new ArrayList<User>(event.getUsers());
+        final ArrayList<User> list = new ArrayList<>(event.getUsers());
         Collections.sort(list, new UserComparator());
         userListLoaded(event.getChannel().getName(), list);
     }
+
     /**
      *
      */
@@ -116,7 +107,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     }
 
 
-    private void redirectOutputStreams(){
+    private void redirectOutputStreams() {
         PrintStream oldStream = System.out;
         PrintStream aPrintStream = new PrintStream(new DualOutputStream(oldStream, this));
         System.setOut(aPrintStream); // catches System.out messages
@@ -125,7 +116,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
 
     @Override
     public void userListLoaded(final String channel, final List<User> users) {
-        final List<String> userList = new ArrayList<String>();
+        final List<String> userList = new ArrayList<>();
         this.users.clear();
         for (User user : users) {
             userList.add(user.getNick());
@@ -135,7 +126,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     }
 
     public List<User> getUsers() {
-        final ArrayList<User> list = new ArrayList<User>(users.values());
+        final ArrayList<User> list = new ArrayList<>(users.values());
         Collections.sort(list, new UserComparator());
         return list;
     }
@@ -147,6 +138,11 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     @Override
     public void writeText(final String text) {
         writeText(text, EventMediatorService.MessageType.INFO);
+    }
+
+    @Override
+    public void writeError(final String text) {
+        writeText(text, EventMediatorService.MessageType.ERROR);
     }
 
     /**
@@ -182,9 +178,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
         BotLeecher botLeecher = ircConnection.getBotLeecher(user);
         if (botLeecher == null) {
             createLeecher(user);
-            botLeecher = ircConnection.getBotLeecher(user);
-        }
-        if (botLeecher != null) {
+        } else {
             if (refresh || botLeecher.getPackList() == null) {
                 botLeecher.requestPackList();
             } else {
@@ -194,7 +188,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     }
 
     public List<Pack> getCurrentPackList(String user) {
-        final List<Pack> packs = new ArrayList<Pack>();
+        final List<Pack> packs = new ArrayList<>();
         final BotLeecher botLeecher = ircConnection.getBotLeecher(user);
         if (botLeecher != null) {
             final PackList packList = botLeecher.getPackList();
@@ -214,10 +208,10 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     }
 
     public int getProgress(final String user) {
-        final BotLeecher botLeecher = ircConnection == null ? null :  ircConnection.getBotLeecher(user);
+        final BotLeecher botLeecher = ircConnection == null ? null : ircConnection.getBotLeecher(user);
         final int progress;
         if (botLeecher != null && botLeecher.getCurrentTransfer() != null) {
-            progress = (int) (((double)botLeecher.getCurrentState() / (double)botLeecher.getFileSize()) * 100);
+            progress = (int) (((double) botLeecher.getCurrentState() / (double) botLeecher.getFileSize()) * 100);
         } else {
             progress = 0;
         }
@@ -225,7 +219,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     }
 
     public long getTransfertRate(final String user) {
-        final BotLeecher botLeecher = ircConnection == null ? null :  ircConnection.getBotLeecher(user);
+        final BotLeecher botLeecher = ircConnection == null ? null : ircConnection.getBotLeecher(user);
         final long rate;
         if (botLeecher != null && botLeecher.getCurrentTransfer() != null) {
             rate = botLeecher.getTransfertRate();
@@ -236,7 +230,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     }
 
     public Date getEstimatedEnd(final String user) {
-        final BotLeecher botLeecher = ircConnection == null ? null :  ircConnection.getBotLeecher(user);
+        final BotLeecher botLeecher = ircConnection == null ? null : ircConnection.getBotLeecher(user);
         final Date end;
         if (botLeecher != null && botLeecher.getCurrentTransfer() != null) {
             end = botLeecher.getEstimatedEnd();
@@ -298,7 +292,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     }
 
     public void cancel(final String user) {
-        final BotLeecher botLeecher = ircConnection == null ? null :  ircConnection.getBotLeecher(user);
+        final BotLeecher botLeecher = ircConnection == null ? null : ircConnection.getBotLeecher(user);
         if (botLeecher != null) {
             botLeecher.cancel();
         }
@@ -313,6 +307,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
 
     /**
      * Todo refactor, this should stay private
+     *
      * @return
      */
     private IrcConnection getIrcConnection() {

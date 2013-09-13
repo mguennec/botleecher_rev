@@ -12,98 +12,91 @@ package fr.botleecher.rev.model;
 import java.io.Serializable;
 
 /**
- *
  * @author francisdb
  */
 public class Pack implements Serializable {
-    
+
     private int id;
     private int downloads;
     private int size;
     private String name;
-    
+
     private PackStatus status;
-    
-    
-    /** Creates a new instance of Pack */
+
+
+    /**
+     * Creates a new instance of Pack
+     */
     public Pack() {
     }
-    
+
     /**
-     * 
-     * @param name 
+     * @param name
      */
     public void setName(String name) {
         this.name = name;
     }
 
     /**
-     * 
-     * @return 
+     * @return
      */
     public String getName() {
         return name;
     }
 
     /**
-     * 
-     * @param downloads 
+     * @param downloads
      */
     public void setDownloads(int downloads) {
         this.downloads = downloads;
     }
 
     /**
-     * 
-     * @return 
+     * @return
      */
     public int getDownloads() {
         return downloads;
     }
 
     /**
-     * 
-     * @param size 
+     * @param size
      */
     public void setSize(int size) {
         this.size = size;
     }
 
     /**
-     * 
-     * @return 
+     * @return
      */
     public int getSize() {
         return size;
     }
 
     /**
-     * 
-     * @param id 
+     * @param id
      */
     public void setId(int id) {
         this.id = id;
     }
 
     /**
-     * 
-     * @return 
+     * @return
      */
     public int getId() {
         return id;
     }
-    
+
     public void setStatus(PackStatus status) {
         this.status = status;
     }
 
     public PackStatus getStatus() {
         return status;
-    }    
+    }
 
     @Override
     public String toString() {
-        return "Pack #"+id+", "+getSize()+"K, "+downloads+" downloads -> "+name;
+        return "Pack #" + id + ", " + getSize() + "K, " + downloads + " downloads -> " + name;
     }
 
 }

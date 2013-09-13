@@ -15,7 +15,7 @@ public class SettingsNicknameProvider implements NicknameProvider {
 
     @Inject
     private Settings settings;
-    
+
     @Override
     public String getNickName() {
         final List<String> nicks = settings.getNicks();

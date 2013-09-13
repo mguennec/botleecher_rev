@@ -13,7 +13,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
 
 
 /**
@@ -134,11 +137,11 @@ public class SettingsImpl implements Settings {
         final String property = configFile.getProperty(name);
         final List<String> list;
         if (StringUtils.isBlank(property)) {
-            list = new ArrayList<String>(Arrays.asList(init));
+            list = new ArrayList<>(Arrays.asList(init));
             add(name, init);
         } else {
             final String[] split = StringUtils.split(property, SEPARATOR);
-            list = new ArrayList<String>(Arrays.asList(split));
+            list = new ArrayList<>(Arrays.asList(split));
         }
         return list;
     }
@@ -150,23 +153,14 @@ public class SettingsImpl implements Settings {
     }
 
     private Properties loadConfig() {
-        Properties configFile = new Properties();
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(getConfigFilePath());
+        final Properties configFile = new Properties();
+        try (FileInputStream fis = new FileInputStream(getConfigFilePath())) {
             configFile.load(fis);
         } catch (IOException ex) {
             LOGGER.error("properties file not found, generating new one", ex);
             createConfig();
-        } finally {
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (IOException ex) {
-                    LOGGER.error("Could not close the FileInputStream", ex);
-                }
-            }
         }
+
         return configFile;
     }
 
@@ -176,20 +170,10 @@ public class SettingsImpl implements Settings {
     }
 
     private void saveConfig(Properties configFile) {
-        FileWriter writer = null;
-        try {
-            writer = new FileWriter(getConfigFilePath());
+        try (FileWriter writer = new FileWriter(getConfigFilePath())) {
             configFile.store(writer, "botleecher configuration file");
         } catch (IOException ex) {
             LOGGER.error("Error writing properties to file", ex);
-        } finally {
-            if (writer != null) {
-                try {
-                    writer.close();
-                } catch (IOException ex) {
-                    LOGGER.error("Could not close the FileWriter", ex);
-                }
-            }
         }
     }
 }

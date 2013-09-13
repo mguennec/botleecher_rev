@@ -7,16 +7,14 @@ import java.util.List;
 
 
 /**
- * 
  * @author francisdb
  */
 public interface IrcConnectionListener extends Listener {
     /**
-     * 
-     * @param channel 
-     * @param users 
+     * @param channel
+     * @param users
      */
     void userListLoaded(String channel, List<User> users);
-    
+
     void disconnected();
 }

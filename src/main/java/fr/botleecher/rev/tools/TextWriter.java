@@ -6,15 +6,21 @@
 package fr.botleecher.rev.tools;
 
 /**
- *
  * @author fdb
  */
 public interface TextWriter {
-    
+
     /**
-     * Write some text
+     * Write some text.
+     *
      * @param text
      */
     void writeText(String text);
+
+    /**
+     * Write some error.
+     * @param text
+     */
+    void writeError(String text);
 
 }

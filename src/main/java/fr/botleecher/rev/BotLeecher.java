@@ -12,6 +12,7 @@ package fr.botleecher.rev;
 import com.google.inject.Inject;
 import fr.botleecher.rev.model.Pack;
 import fr.botleecher.rev.model.PackList;
+import fr.botleecher.rev.model.PackStatus;
 import fr.botleecher.rev.service.PackListReader;
 import fr.botleecher.rev.service.Settings;
 import org.apache.commons.lang3.time.DateUtils;
@@ -23,10 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -50,7 +48,6 @@ public class BotLeecher {
     private int counter = 1;
     private ReceiveFileTransfer currentTransfer;
     private long fileSize;
-    private String lastNotice;
     private File listFile;
     private List<BotListener> listeners;
     private Date startTime;
@@ -72,9 +69,8 @@ public class BotLeecher {
         this.currentTransfer = null;
         this.leeching = false;
         this.listRequested = false;
-        this.lastNotice = "";
         this.description = "";
-        this.listeners = new Vector<BotListener>();
+        this.listeners = new Vector<>();
         this.queue = new LeecherQueue();
         executorService = Executors.newFixedThreadPool(1);
     }
@@ -89,8 +85,7 @@ public class BotLeecher {
     }
 
     public void cancel() {
-        queue.clear();
-        botUser.send().message("XDCC CANCEL");
+        queue.cancel();
     }
 
     public PackList getPackList() {
@@ -109,9 +104,7 @@ public class BotLeecher {
     }
 
     private void downloadFinished(IncomingFileTransferEvent transfer) {
-        //final Telegraph telegraph = new Telegraph("Download completed", transfer.getSafeFilename() + " has been downloaded (" + currentTransfer.getBytesTransfered() + "/" + transfer.getFilesize() + ")", TelegraphType.NOTIFICATION_DONE, WindowPosition.TOPLEFT, 10000);
-        //final TelegraphQueue queue = new TelegraphQueue();
-        //queue.add(telegraph);
+        changeState(transfer.getRawFilename(), PackStatus.DOWNLOADED);
         LOGGER.info("FINISHED:\t Transfer finished for " + transfer.getSafeFilename());
     }
 
@@ -120,30 +113,6 @@ public class BotLeecher {
      */
     public void addListener(BotListener listener) {
         listeners.add(listener);
-    }
-
-    public void onNotice(String notice) {
-        if (notice.contains("Invalid Pack Number")) {
-            LOGGER.info("DONE LEECHING BOT " + botUser.getNick());
-            leeching = false;
-        }
-
-        if (notice.contains("point greater")) {
-            LOGGER.info("EXISTS:\t try to close connection");
-            /*try {
-               // curentTransfer.close();
-            } catch (IOException e) {
-                // Nothing
-            }*/
-            //this.sendMessage(botName,"XDCC remove");
-        }
-
-        if (notice.contains("Closing Connection: Pack file changed")) {
-            // TODO do something here (retry?)
-            LOGGER.info("PACK file changed");
-        }
-
-        lastNotice = notice;
     }
 
     /**
@@ -184,20 +153,19 @@ public class BotLeecher {
     /**
      * @return
      */
-    public String getLastNotice() {
-        return lastNotice;
-    }
-
-    /**
-     * @return
-     */
     public String getDescription() {
         return description;
     }
 
     public void requestPack(int nr) {
         queue.add(nr);
-        //botUser.send().message("XDCC SEND " + nr);
+        changeState(nr, PackStatus.QUEUED);
+    }
+
+    private void fireListEvent() {
+        for (BotListener listener : listeners) {
+            listener.packListLoaded(botUser.getNick(), Collections.unmodifiableList(packList.getPacks()));
+        }
     }
 
     public ReceiveFileTransfer getCurrentTransfer() {
@@ -248,25 +216,35 @@ public class BotLeecher {
         executorService.shutdownNow();
     }
 
+    public void changeState(final String name, final PackStatus status) {
+        //System.out.println(name);
+        if (packList != null) {
+            changeState(packList.getByName(name), status);
+        }
+    }
+
+    public void changeState(final Integer nb, final PackStatus status) {
+        if (packList != null) {
+            changeState(packList.getByNumber(nb), status);
+        }
+    }
+
+    public void changeState(final Pack pack, final PackStatus status) {
+        if (pack != null && status != null) {
+            pack.setStatus(status);
+            fireListEvent();
+        }
+    }
+
     public class LeecherQueue extends LinkedBlockingQueue<Integer> implements Runnable {
 
         private boolean working = true;
+        private boolean cancel = false;
 
         public void stop() {
             working = false;
         }
 
-        /**
-         * When an object implementing interface <code>Runnable</code> is used
-         * to create a thread, starting the thread causes the object's
-         * <code>run</code> method to be called in that separately executing
-         * thread.
-         * <p/>
-         * The general contract of the method <code>run</code> is that it may
-         * take any action whatsoever.
-         *
-         * @see Thread#run()
-         */
         @Override
         public void run() {
             while (working) {
@@ -280,7 +258,10 @@ public class BotLeecher {
         }
 
         private synchronized void askPack(Integer nr) {
-            if (nr != null) {
+            if (cancel) {
+                cancel = false;
+                changeState(nr, PackStatus.AVAILABLE);
+            } else if (nr != null) {
                 if (nr.equals(1)) {
                     listRequested = true;
                 }
@@ -303,16 +284,14 @@ public class BotLeecher {
                     for (String message : packList.getMessages()) {
                         description += message + "\n";
                     }
-                    List<Pack> packs = Collections.unmodifiableList(packList.getPacks());
-                    for (BotListener listener : listeners) {
-                        listener.packListLoaded(botUser.getNick(), packs);
-                    }
+                    fireListEvent();
                 } catch (IOException ex) {
                     LOGGER.error("Error while receiving file!", ex);
                 }
             } else {
                 // TODO create subfolder per bot
                 File saveFile = new File(settings.getSaveFolder(), transfer.getSafeFilename());
+                changeState(transfer.getRawFilename(), PackStatus.DOWNLOADING);
                 try {
                     currentTransfer = transfer.accept(saveFile);
                 } catch (IOException e) {
@@ -335,6 +314,7 @@ public class BotLeecher {
                         currentTransfer.transfer();
                         downloadFinished(transfer);
                     } catch (IOException e) {
+                        changeState(transfer.getRawFilename(), PackStatus.AVAILABLE);
                         saveFile.delete();
                         LOGGER.error(e.getMessage(), e);
                     }
@@ -343,6 +323,16 @@ public class BotLeecher {
                     currentTransfer = null;
                 }
             }
+        }
+
+        public void cancel() {
+            final List<Integer> list = new ArrayList<>();
+            cancel = true;
+            drainTo(list);
+            for (Integer id : list) {
+                changeState(id, PackStatus.AVAILABLE);
+            }
+            botUser.send().message("XDCC CANCEL");
         }
     }
 

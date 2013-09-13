@@ -6,7 +6,6 @@
 package fr.botleecher.rev.service;
 
 /**
- *
  * @author fdb
  */
 public interface NicknameProvider {

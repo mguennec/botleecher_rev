@@ -6,10 +6,10 @@
 package fr.botleecher.rev.service;
 
 import fr.botleecher.rev.model.PackList;
+
 import java.io.File;
 
 /**
- *
  * @author fdb
  */
 public interface PackListReader {

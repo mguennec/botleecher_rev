@@ -12,22 +12,23 @@ import java.util.*;
 
 
 /**
- *
  * @author francisdb
  */
 public class IrcConnection extends PircBotX {
 
     private final List<IrcConnectionListener> listeners;
     //private PropertyChangeSupport propertyChangeSupport;
-    
-    private final Map<String,BotLeecher> leechers;
-    
+
+    private final Map<String, BotLeecher> leechers;
+
     private final BotLeecherFactory botLeecherFactory;
 
     private final BotMediator mediator;
 
-    
-    /** Creates a new instance of Main */
+
+    /**
+     * Creates a new instance of Main
+     */
     @Inject
     public IrcConnection(NicknameProvider nickProvider, BotLeecherFactory botLeecherFactory, BotMediator mediator) {
         super(new Configuration.Builder()
@@ -36,23 +37,21 @@ public class IrcConnection extends PircBotX {
                 .addListener(mediator).setServerHostname(mediator.getServer()).addAutoJoinChannel(mediator.getChannel())
                 .buildConfiguration());
         this.botLeecherFactory = botLeecherFactory;
-        
-        this.leechers = Collections.synchronizedMap(new HashMap<String,BotLeecher>());
-        this.listeners = new Vector<IrcConnectionListener>();
+
+        this.leechers = Collections.synchronizedMap(new HashMap<String, BotLeecher>());
+        this.listeners = new Vector<>();
         this.listeners.add(mediator);
         this.mediator = mediator;
 
     }
-    
+
     /**
-     *
-     *
-     * @param user 
-     * @return 
+     * @param user
+     * @return
      */
     public BotLeecher makeLeecher(User user) {
         BotLeecher leecher = botLeecherFactory.getBotLeecher(user, this);
-        leechers.put(user.getNick(),leecher);
+        leechers.put(user.getNick(), leecher);
         leecher.addListener(mediator);
         leecher.start();
         return leecher;
@@ -61,6 +60,7 @@ public class IrcConnection extends PircBotX {
     public void removeLeecher(User user) {
         removeLeecher(user.getNick());
     }
+
     public void removeLeecher(String user) {
         final BotLeecher leecher = leechers.get(user);
         if (leecher != null) {
@@ -76,22 +76,20 @@ public class IrcConnection extends PircBotX {
             removeLeecher(user);
         }
     }
-    
+
     /**
-     * 
-     * @param botName 
-     * @return 
+     * @param botName
+     * @return
      */
-    public BotLeecher getBotLeecher(String botName){
+    public BotLeecher getBotLeecher(String botName) {
         return leechers.get(botName);
     }
 
     public List<BotLeecher> getAllBots() {
-        return new ArrayList<BotLeecher>(leechers.values());
+        return new ArrayList<>(leechers.values());
     }
-    
+
     /**
-     *
      * @param listener
      */
     public void removeBotListener(IrcConnectionListener listener) {
