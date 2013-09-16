@@ -30,7 +30,7 @@ public class IrcConnection extends PircBotX {
      * Creates a new instance of Main
      */
     @Inject
-    public IrcConnection(NicknameProvider nickProvider, BotLeecherFactory botLeecherFactory, BotMediator mediator) {
+    public IrcConnection(NicknameProvider nickProvider, BotLeecherFactory botLeecherFactory, BotMediator mediator) throws Exception {
         super(new Configuration.Builder()
                 .setLogin(nickProvider.getNickName()).setName(nickProvider.getNickName())
                 .setFinger(nickProvider.getNickName()).setVersion("xxx").setAutoNickChange(true)

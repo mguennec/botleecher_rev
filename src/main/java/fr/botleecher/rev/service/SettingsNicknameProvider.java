@@ -17,7 +17,7 @@ public class SettingsNicknameProvider implements NicknameProvider {
     private Settings settings;
 
     @Override
-    public String getNickName() {
+    public String getNickName() throws Exception {
         final List<String> nicks = settings.getNicks();
         final String nick;
         if (nicks != null && !nicks.isEmpty()) {

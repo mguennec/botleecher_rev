@@ -28,6 +28,11 @@ public class ConnectionProvider implements Provider<IrcConnection> {
 
     @Override
     public IrcConnection get() {
-        return new IrcConnection(nickProvider, botLeecherFactory, mediator);
+        try {
+            return new IrcConnection(nickProvider, botLeecherFactory, mediator);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

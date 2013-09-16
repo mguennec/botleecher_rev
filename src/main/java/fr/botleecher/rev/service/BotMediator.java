@@ -79,7 +79,11 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
             public void run() {
                 if (getIrcConnection() != null) {
                     writeText(event.getUser().getNick() + " : Downloading " + event.getSafeFilename(), EventMediatorService.MessageType.DOWNLOAD);
-                    getIrcConnection().getBotLeecher(event.getUser().getNick()).onIncomingFileTransfer(event);
+                    try {
+                        getIrcConnection().getBotLeecher(event.getUser().getNick()).onIncomingFileTransfer(event);
+                    } catch (Exception e) {
+                        writeError(e.getMessage());
+                    }
                     writeText(event.getUser().getNick() + " : Download complete " + event.getSafeFilename(), EventMediatorService.MessageType.DOWNLOAD);
                 }
             }
@@ -103,7 +107,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     }
 
     public BotMediator() {
-        redirectOutputStreams();
+        //redirectOutputStreams();
     }
 
 
@@ -148,7 +152,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     /**
      * Connects to the irc network
      */
-    public void connect(final String server, final String channel) throws InterruptedException {
+    public void connect(final String server, final String channel) throws Exception {
         if (ircConnection != null) {
             disconnected();
         }
@@ -240,43 +244,43 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
         return end;
     }
 
-    public List<String> getServers() {
+    public List<String> getServers() throws Exception {
         return settings.getServers();
     }
 
-    public void addServer(final String server) {
+    public void addServer(final String server) throws Exception {
         settings.addServer(server);
     }
 
-    public List<String> getChannels() {
+    public List<String> getChannels() throws Exception {
         return settings.getChannels();
     }
 
-    public void addChannel(final String channel) {
+    public void addChannel(final String channel) throws Exception {
         settings.addChannel(channel);
     }
 
-    public String getSaveDir() {
-        return settings.getSaveFolder().getAbsolutePath();
+    public String getSaveDir() throws Exception {
+        return settings.getSaveFolder();
     }
 
-    public void setSaveDir(final String path) {
+    public void setSaveDir(final String path) throws Exception {
         settings.setSaveFolder(path);
     }
 
-    public List<String> getNicks() {
+    public List<String> getNicks() throws Exception {
         return settings.getNicks();
     }
 
-    public void setNicks(final String nicks) {
+    public void setNicks(final List<String> nicks) throws Exception {
         settings.setNicks(nicks);
     }
 
-    public List<String> getKeywords() {
+    public List<String> getKeywords() throws Exception {
         return settings.getKeywords();
     }
 
-    public void setKeywords(final String keywords) {
+    public void setKeywords(final List<String> keywords) throws Exception {
         settings.setKeywords(keywords);
     }
 

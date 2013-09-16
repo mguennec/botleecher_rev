@@ -13,10 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 
 /**
@@ -36,7 +33,7 @@ public class SettingsImpl implements Settings {
     private Properties configFile = loadConfig();
 
     @Override
-    public File getSaveFolder() {
+    public String getSaveFolder() {
         File saveFolder = null;
         String folder = configFile.getProperty(PROP_SAVEFOLDER);
         if (folder != null) {
@@ -50,7 +47,7 @@ public class SettingsImpl implements Settings {
             configFile.setProperty(PROP_SAVEFOLDER, newFolder.getAbsolutePath());
             saveConfig(configFile);
         }
-        return saveFolder;
+        return saveFolder.getAbsolutePath();
     }
 
     @Override
@@ -85,9 +82,23 @@ public class SettingsImpl implements Settings {
     }
 
     @Override
-    public void setNicks(String nicks) {
-        configFile.setProperty(PROP_NICKS, nicks);
+    public void setNicks(List<String> nicks) {
+        configFile.setProperty(PROP_NICKS, getPropertyFromList(nicks));
         saveConfig(configFile);
+    }
+
+    private String getPropertyFromList(final List<String> list) {
+        final StringBuilder builder = new StringBuilder();
+        boolean first = true;
+        for (String string : list) {
+            if (first) {
+                first = false;
+            } else {
+                builder.append(SEPARATOR);
+            }
+            builder.append(string);
+        }
+        return builder.toString();
     }
 
     @Override
@@ -97,21 +108,7 @@ public class SettingsImpl implements Settings {
 
     @Override
     public void setKeywords(List<String> keywords) {
-        final StringBuilder builder = new StringBuilder();
-        if (keywords != null) {
-            for (String keyword : keywords) {
-                if (builder.length() > 0) {
-                    builder.append(SEPARATOR);
-                }
-                builder.append(keyword);
-            }
-            setKeywords(builder.toString());
-        }
-    }
-
-    @Override
-    public void setKeywords(String keywords) {
-        configFile.setProperty(PROP_KEYWORDS, keywords);
+        configFile.setProperty(PROP_KEYWORDS, getPropertyFromList(keywords));
         saveConfig(configFile);
     }
 

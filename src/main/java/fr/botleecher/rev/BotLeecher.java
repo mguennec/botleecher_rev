@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -99,7 +100,7 @@ public class BotLeecher {
     /**
      * @param transfer
      */
-    public void onIncomingFileTransfer(IncomingFileTransferEvent transfer) {
+    public void onIncomingFileTransfer(IncomingFileTransferEvent transfer) throws Exception {
         queue.onIncomingFileTransfer(transfer);
     }
 
@@ -190,12 +191,12 @@ public class BotLeecher {
 
     public Date getEstimatedEnd() {
         final Date end;
-        final long transfertRate = getTransfertRate();
-        if (transfertRate == 0) {
+        final long transferRate = getTransfertRate();
+        if (transferRate == 0) {
             end = null;
         } else {
             final long data = getFileSize() - (currentTransfer == null ? 0 : currentTransfer.getBytesTransfered());
-            final long time = data / transfertRate;
+            final long time = data / transferRate;
             end = startTime == null ? null : DateUtils.addSeconds(startTime, (int) time);
         }
 
@@ -217,7 +218,6 @@ public class BotLeecher {
     }
 
     public void changeState(final String name, final PackStatus status) {
-        //System.out.println(name);
         if (packList != null) {
             changeState(packList.getByName(name), status);
         }
@@ -236,20 +236,33 @@ public class BotLeecher {
         }
     }
 
-    public class LeecherQueue extends LinkedBlockingQueue<Integer> implements Runnable {
+    public class LeecherQueue implements Runnable {
 
         private boolean working = true;
         private boolean cancel = false;
 
+        private BlockingQueue<Integer> internalQueue = new LinkedBlockingQueue<>();
+
         public void stop() {
             working = false;
+        }
+
+
+        public boolean add(Integer nr) {
+            final boolean retVal;
+            if (internalQueue.contains(nr)) {
+                retVal = false;
+            } else {
+                retVal = internalQueue.add(nr);
+            }
+            return retVal;
         }
 
         @Override
         public void run() {
             while (working) {
                 try {
-                    final Integer nr = take();
+                    final Integer nr = internalQueue.take();
                     askPack(nr);
                 } catch (InterruptedException e) {
                     LOGGER.error(e.getMessage(), e);
@@ -272,7 +285,7 @@ public class BotLeecher {
         /**
          * @param transfer
          */
-        public synchronized void onIncomingFileTransfer(IncomingFileTransferEvent transfer) {
+        public synchronized void onIncomingFileTransfer(IncomingFileTransferEvent transfer) throws Exception {
             if (listRequested) {
                 try {
                     listFile = java.io.File.createTempFile("list", ".tmp");
@@ -328,7 +341,7 @@ public class BotLeecher {
         public void cancel() {
             final List<Integer> list = new ArrayList<>();
             cancel = true;
-            drainTo(list);
+            internalQueue.drainTo(list);
             for (Integer id : list) {
                 changeState(id, PackStatus.AVAILABLE);
             }

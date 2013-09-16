@@ -14,6 +14,6 @@ import java.io.File;
  */
 public interface PackListReader {
 
-    PackList readPacks(File listFile);
+    PackList readPacks(File listFile) throws Exception;
 
 }

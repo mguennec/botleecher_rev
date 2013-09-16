@@ -5,7 +5,6 @@
 
 package fr.botleecher.rev.service;
 
-import java.io.File;
 import java.util.List;
 
 /**
@@ -13,28 +12,26 @@ import java.util.List;
  */
 public interface Settings {
 
-    File getSaveFolder();
+    String getSaveFolder() throws Exception;
 
-    void setSaveFolder(final String dir);
+    void setSaveFolder(final String dir) throws Exception;
 
-    List<String> getServers();
+    List<String> getServers() throws Exception;
 
-    void addServer(String server);
+    void addServer(String server) throws Exception;
 
-    List<String> getChannels();
+    List<String> getChannels() throws Exception;
 
-    void addChannel(String channel);
+    void addChannel(String channel) throws Exception;
 
-    void addNick(String nick);
+    void addNick(String nick) throws Exception;
 
-    List<String> getNicks();
+    List<String> getNicks() throws Exception;
 
-    void setNicks(String nicks);
+    void setNicks(List<String> nicks) throws Exception;
 
-    List<String> getKeywords();
+    List<String> getKeywords() throws Exception;
 
-    void setKeywords(List<String> keywords);
-
-    void setKeywords(final String keywords);
+    void setKeywords(List<String> keywords) throws Exception;
 
 }

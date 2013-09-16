@@ -10,6 +10,6 @@ package fr.botleecher.rev.service;
  */
 public interface NicknameProvider {
 
-    String getNickName();
+    String getNickName() throws Exception;
 
 }

@@ -22,6 +22,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,9 +43,10 @@ public class PackListReaderImpl implements PackListReader {
     }
 
     @Override
-    public PackList readPacks(File listFile) {
+    public PackList readPacks(File listFile) throws Exception {
         List<Pack> packs = new ArrayList<>();
         List<String> messages = new ArrayList<>();
+        List<String> files = Arrays.asList(new File(settings.getSaveFolder()).list());
 
         try (BufferedReader in = new BufferedReader(new FileReader(listFile))) {
             String str;
@@ -52,7 +54,7 @@ public class PackListReaderImpl implements PackListReader {
                 final Matcher matcher = PATTERN.matcher(str);
                 if (matcher.find()) {
                     final Pack pack = readPackLine(matcher);
-                    checkExists(pack);
+                    checkExists(pack, files);
                     packs.add(pack);
                 } else {
                     messages.add(str);
@@ -65,10 +67,8 @@ public class PackListReaderImpl implements PackListReader {
         return new PackList(packs, messages);
     }
 
-    private void checkExists(Pack pack) {
-        File saveFolder = settings.getSaveFolder();
-        File packFile = new File(saveFolder, pack.getName());
-        if (packFile.exists()) {
+    private void checkExists(Pack pack, List<String> files) throws Exception {
+        if (files.contains(pack.getName())) {
             pack.setStatus(PackStatus.DOWNLOADED);
         }
     }
