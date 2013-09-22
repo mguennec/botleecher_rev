@@ -11,12 +11,10 @@ import de.flapdoodle.embed.process.config.IRuntimeConfig;
 import de.flapdoodle.embed.process.distribution.Distribution;
 import de.flapdoodle.embed.process.runtime.ICommandLinePostProcessor;
 import de.flapdoodle.embed.process.runtime.Network;
+import fr.botleecher.rev.enums.SettingProperty;
+import fr.botleecher.rev.tools.PropertiesLoader;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * Created with IntelliJ IDEA.
@@ -28,11 +26,11 @@ import java.util.Properties;
 @Singleton
 public class Connection {
 
-    private static final String CONFIG_FILE_NAME = "botleecher.properties";
-
     private MongodExecutable executable;
 
     private MongoClient client;
+
+    private PropertiesLoader loader = PropertiesLoader.getInstance();
 
     public Connection() throws Exception {
         createDb();
@@ -52,7 +50,7 @@ public class Connection {
             return;
         }
 
-        final String path = loadConfig().getProperty("db", "db");
+        final String path = loader.getProperty(SettingProperty.PROP_STORAGEPATH.getPropertyName(), SettingProperty.PROP_STORAGEPATH.getDefaultValue().get(0));
 
         final int port = Network.getFreeServerPort();
         final IRuntimeConfig runtimeConfig = new RuntimeConfigBuilder().defaults(Command.MongoD).commandLinePostProcessor(new ICommandLinePostProcessor() {
@@ -80,22 +78,5 @@ public class Connection {
         executable = starter.prepare(config);
         executable.start();
         client = new MongoClient("localhost", port);
-    }
-
-    private Properties loadConfig() {
-        final Properties configFile = new Properties();
-        try (FileInputStream fis = new FileInputStream(System.getProperty("user.home") + File.separator + CONFIG_FILE_NAME)) {
-            configFile.load(fis);
-        } catch (IOException ex) {
-        }
-
-        return configFile;
-    }
-
-    public void stopDb() {
-        if (executable != null) {
-            executable.stop();
-            executable = null;
-        }
     }
 }

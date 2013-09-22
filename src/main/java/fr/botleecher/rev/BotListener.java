@@ -24,4 +24,6 @@ public interface BotListener {
      * @param packList
      */
     void packListLoaded(String botName, List<Pack> packList);
+
+    void updateStatus(String botName, String fileName, int completion);
 }

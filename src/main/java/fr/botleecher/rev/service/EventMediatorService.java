@@ -19,6 +19,8 @@ public interface EventMediatorService {
 
     void sendUserList(final List<String> users);
 
+    void sendTransferStatus(final String botName, final String fileName, final int completion);
+
     public enum MessageType {
         DOWNLOAD, INFO, ERROR, REQUEST;
     }

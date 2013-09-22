@@ -10,6 +10,7 @@
 package fr.botleecher.rev;
 
 import com.google.inject.Inject;
+import fr.botleecher.rev.enums.SettingProperty;
 import fr.botleecher.rev.model.Pack;
 import fr.botleecher.rev.model.PackList;
 import fr.botleecher.rev.model.PackStatus;
@@ -53,6 +54,7 @@ public class BotLeecher {
     private List<BotListener> listeners;
     private Date startTime;
     private PackList packList;
+    private String fileName;
 
     /**
      * Creates a new instance of BotLeecher
@@ -169,6 +171,12 @@ public class BotLeecher {
         }
     }
 
+    private void fireStatusEvent() {
+        for (BotListener listener : listeners) {
+            listener.updateStatus(botUser.getNick(), getFileName(), getProgress());
+        }
+    }
+
     public ReceiveFileTransfer getCurrentTransfer() {
         return currentTransfer;
     }
@@ -236,17 +244,32 @@ public class BotLeecher {
         }
     }
 
+    public String getFileName() {
+        return fileName == null ? "" : fileName;
+    }
+
+    public int getProgress() {
+        final int progress;
+        if (getCurrentTransfer() != null) {
+            progress = (int) (((double) getCurrentState() / (double) getFileSize()) * 100);
+        } else {
+            progress = 0;
+        }
+        return progress;
+    }
+
     public class LeecherQueue implements Runnable {
 
         private boolean working = true;
         private boolean cancel = false;
-
+        private Timer timer;
         private BlockingQueue<Integer> internalQueue = new LinkedBlockingQueue<>();
 
         public void stop() {
             working = false;
+            timer.cancel();
+            timer = null;
         }
-
 
         public boolean add(Integer nr) {
             final boolean retVal;
@@ -261,6 +284,9 @@ public class BotLeecher {
         @Override
         public void run() {
             while (working) {
+                if (timer == null) {
+                    startWatcherThread();
+                }
                 try {
                     final Integer nr = internalQueue.take();
                     askPack(nr);
@@ -303,7 +329,7 @@ public class BotLeecher {
                 }
             } else {
                 // TODO create subfolder per bot
-                File saveFile = new File(settings.getSaveFolder(), transfer.getSafeFilename());
+                File saveFile = new File(settings.get(SettingProperty.PROP_SAVEFOLDER).getFirstValue(), transfer.getSafeFilename());
                 changeState(transfer.getRawFilename(), PackStatus.DOWNLOADING);
                 try {
                     currentTransfer = transfer.accept(saveFile);
@@ -324,6 +350,7 @@ public class BotLeecher {
                     try {
                         downloading = true;
                         startTime = new Date();
+                        fileName = transfer.getSafeFilename();
                         currentTransfer.transfer();
                         downloadFinished(transfer);
                     } catch (IOException e) {
@@ -331,9 +358,12 @@ public class BotLeecher {
                         saveFile.delete();
                         LOGGER.error(e.getMessage(), e);
                     }
+
                     startTime = null;
                     downloading = false;
                     currentTransfer = null;
+                    fileName = null;
+                    fireStatusEvent();
                 }
             }
         }
@@ -347,6 +377,23 @@ public class BotLeecher {
             }
             botUser.send().message("XDCC CANCEL");
         }
+
+        private void startWatcherThread() {
+            if (timer == null) {
+                timer = new Timer();
+                timer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        if (working) {
+                            if (currentTransfer != null) {
+                                fireStatusEvent();
+                            }
+                        }
+                    }
+                }, 0, 5000);
+            }
+        }
+
     }
 
 

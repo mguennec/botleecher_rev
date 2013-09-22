@@ -1,10 +1,11 @@
-package fr.botleecher.rev.service.mongo.entities;
+package fr.botleecher.rev.entities;
 
 import com.github.jmkgreen.morphia.annotations.Entity;
 import com.github.jmkgreen.morphia.annotations.Id;
-import com.github.jmkgreen.morphia.annotations.Property;
+import fr.botleecher.rev.enums.SettingProperty;
 import org.bson.types.ObjectId;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -20,29 +21,28 @@ public class Setting {
     @Id
     private ObjectId id;
 
-    private String key;
+    private SettingProperty key;
 
-    @Property
     private List<String> value;
 
     public Setting() {
         // Nothing
     }
 
-    public Setting(String key) {
+    public Setting(SettingProperty key) {
         this.key = key;
     }
 
-    public Setting(String key, List<String> value) {
-        this.key = key;
-        this.value = value;
+    public Setting(SettingProperty key, List<String> value) {
+        this(key);
+        setValue(value);
     }
 
     public ObjectId getId() {
         return id;
     }
 
-    public String getKey() {
+    public SettingProperty getKey() {
         return key;
     }
 
@@ -50,15 +50,19 @@ public class Setting {
         return value;
     }
 
+    public String getFirstValue() {
+        return (value == null || value.isEmpty()) ? null : value.get(0);
+    }
+
     public void setId(ObjectId id) {
         this.id = id;
     }
 
-    public void setKey(String key) {
+    public void setKey(SettingProperty key) {
         this.key = key;
     }
 
     public void setValue(List<String> value) {
-        this.value = value;
+        this.value = new ArrayList<>(value);
     }
 }

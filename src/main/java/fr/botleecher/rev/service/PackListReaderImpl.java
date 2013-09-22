@@ -11,6 +11,7 @@ package fr.botleecher.rev.service;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import fr.botleecher.rev.BotLeecher;
+import fr.botleecher.rev.enums.SettingProperty;
 import fr.botleecher.rev.model.Pack;
 import fr.botleecher.rev.model.PackList;
 import fr.botleecher.rev.model.PackStatus;
@@ -46,7 +47,7 @@ public class PackListReaderImpl implements PackListReader {
     public PackList readPacks(File listFile) throws Exception {
         List<Pack> packs = new ArrayList<>();
         List<String> messages = new ArrayList<>();
-        List<String> files = Arrays.asList(new File(settings.getSaveFolder()).list());
+        List<String> files = Arrays.asList(new File(settings.get(SettingProperty.PROP_SAVEFOLDER).getFirstValue()).list());
 
         try (BufferedReader in = new BufferedReader(new FileReader(listFile))) {
             String str;

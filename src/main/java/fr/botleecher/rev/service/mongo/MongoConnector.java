@@ -3,6 +3,7 @@ package fr.botleecher.rev.service.mongo;
 import com.github.jmkgreen.morphia.Datastore;
 import com.github.jmkgreen.morphia.Key;
 import com.github.jmkgreen.morphia.Morphia;
+import com.github.jmkgreen.morphia.converters.EnumConverter;
 import com.github.jmkgreen.morphia.query.Query;
 import com.google.inject.Inject;
 
@@ -24,7 +25,8 @@ public class MongoConnector {
     @Inject
     public MongoConnector(final Connection connection) throws Exception {
         morphia = new Morphia();
-        morphia.mapPackage("fr.botleecher.rev.service.mongo.entities");
+        morphia.mapPackage("fr.botleecher.rev.entities");
+        morphia.getMapper().getConverters().addConverter(EnumConverter.class);
         datastore = morphia.createDatastore(connection.getConnection(), DB_NAME);
     }
 

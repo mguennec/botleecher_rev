@@ -7,6 +7,8 @@ import fr.botleecher.rev.BotLeecher;
 import fr.botleecher.rev.BotListener;
 import fr.botleecher.rev.IrcConnection;
 import fr.botleecher.rev.IrcConnectionListener;
+import fr.botleecher.rev.entities.Setting;
+import fr.botleecher.rev.enums.SettingProperty;
 import fr.botleecher.rev.model.Pack;
 import fr.botleecher.rev.model.PackList;
 import fr.botleecher.rev.tools.DualOutputStream;
@@ -64,7 +66,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     public void onMessage(MessageEvent event) throws Exception {
         final String message = event.getMessage();
         if (message != null) {
-            for (String keyword : settings.getKeywords()) {
+            for (String keyword : settings.get(SettingProperty.PROP_KEYWORDS).getValue()) {
                 if (message.toLowerCase().contains(keyword.toLowerCase())) {
                     writeText(event.getUser().getNick() + " : " + message);
                     break;
@@ -222,7 +224,7 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
         return progress;
     }
 
-    public long getTransfertRate(final String user) {
+    public long getTransferRate(final String user) {
         final BotLeecher botLeecher = ircConnection == null ? null : ircConnection.getBotLeecher(user);
         final long rate;
         if (botLeecher != null && botLeecher.getCurrentTransfer() != null) {
@@ -245,43 +247,47 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     }
 
     public List<String> getServers() throws Exception {
-        return settings.getServers();
+        return settings.get(SettingProperty.PROP_SERVER).getValue();
     }
 
     public void addServer(final String server) throws Exception {
-        settings.addServer(server);
+        final Setting setting = settings.get(SettingProperty.PROP_SERVER);
+        setting.getValue().add(server);
+        settings.save(setting);
     }
 
     public List<String> getChannels() throws Exception {
-        return settings.getChannels();
+        return settings.get(SettingProperty.PROP_CHANNEL).getValue();
     }
 
     public void addChannel(final String channel) throws Exception {
-        settings.addChannel(channel);
+        final Setting setting = settings.get(SettingProperty.PROP_CHANNEL);
+        setting.getValue().add(channel);
+        settings.save(setting);
     }
 
     public String getSaveDir() throws Exception {
-        return settings.getSaveFolder();
+        return settings.get(SettingProperty.PROP_SAVEFOLDER).getValue().get(0);
     }
 
     public void setSaveDir(final String path) throws Exception {
-        settings.setSaveFolder(path);
+        settings.save(new Setting(SettingProperty.PROP_SAVEFOLDER, Arrays.asList(path)));
     }
 
     public List<String> getNicks() throws Exception {
-        return settings.getNicks();
+        return settings.get(SettingProperty.PROP_NICKS).getValue();
     }
 
     public void setNicks(final List<String> nicks) throws Exception {
-        settings.setNicks(nicks);
+        settings.save(new Setting(SettingProperty.PROP_NICKS, nicks));
     }
 
     public List<String> getKeywords() throws Exception {
-        return settings.getKeywords();
+        return settings.get(SettingProperty.PROP_KEYWORDS).getValue();
     }
 
     public void setKeywords(final List<String> keywords) throws Exception {
-        settings.setKeywords(keywords);
+        settings.save(new Setting(SettingProperty.PROP_KEYWORDS, keywords));
     }
 
     public String getCurrentFile(final String user) {
@@ -341,6 +347,11 @@ public class BotMediator extends ListenerAdapter implements IrcConnectionListene
     @Override
     public void packListLoaded(final String botName, List<Pack> packList) {
         service.sendPack(botName, packList);
+    }
+
+    @Override
+    public void updateStatus(String botName, String fileName, int completion) {
+        service.sendTransferStatus(botName, fileName, completion);
     }
 
 

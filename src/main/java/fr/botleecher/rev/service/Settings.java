@@ -5,33 +5,15 @@
 
 package fr.botleecher.rev.service;
 
-import java.util.List;
+import fr.botleecher.rev.entities.Setting;
+import fr.botleecher.rev.enums.SettingProperty;
 
 /**
  * @author fdb
  */
 public interface Settings {
 
-    String getSaveFolder() throws Exception;
+    Setting get(SettingProperty property) throws Exception;
 
-    void setSaveFolder(final String dir) throws Exception;
-
-    List<String> getServers() throws Exception;
-
-    void addServer(String server) throws Exception;
-
-    List<String> getChannels() throws Exception;
-
-    void addChannel(String channel) throws Exception;
-
-    void addNick(String nick) throws Exception;
-
-    List<String> getNicks() throws Exception;
-
-    void setNicks(List<String> nicks) throws Exception;
-
-    List<String> getKeywords() throws Exception;
-
-    void setKeywords(List<String> keywords) throws Exception;
-
+    void save(Setting setting) throws Exception;
 }
